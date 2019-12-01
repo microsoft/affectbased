@@ -1,5 +1,5 @@
 # Affect-based Intrinsic Rewards for Learning General Representations  
-Official code repository for [arxiv link]  
+This a work in progress. Official code repository for the paper, arxiv link will be uploaded soon.
   
 ### System Requirements  
   
