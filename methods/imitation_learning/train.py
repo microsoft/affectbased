@@ -10,13 +10,12 @@ from utils import import_data
 import tensorflow as tf
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path', '-model_path', help='model file path if fine tune an existing model', default='C:\\Users\\user\\Documents\\models\\imitation_4images_nocov\\model40.ckpt', type=str)
 parser.add_argument('--data_file', '-data_file', help='path to raw data folder', default='C:\\Users\\user\\Documents\\Data\\gs_4images_nocov_b99\\gs_4images_nocov_b99.h5', type=str)
 parser.add_argument('--output_dir', '-output_dir', help='path to output folder', default='C:\\Users\\user\\Documents\\models\\imitation_4images_nocov_b99_finetuned', type=str)
 parser.add_argument('--num_imgs', '-num_imgs', help='number of images to train on', default=50000, type=int)
 parser.add_argument('--num_actions', '-num_actions', help='number of actions for the model to perdict', default=5, type=int)
 parser.add_argument('--batch_size', '-batch_size', help='number of samples in one minibatch', default=32, type=int)
-parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=11, type=int)
+parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=41, type=int)
 args = parser.parse_args()
 
 # tf function to train
@@ -52,10 +51,6 @@ if __name__ == "__main__":
     model = ILModel()
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy()
     optimizer = tf.keras.optimizers.Adam()
-
-    # load model if asked
-    if args.model_path != "":
-        model.load_weights(args.model_path)
 
     # define metrics
     train_loss = tf.keras.metrics.Mean(name='train_loss')
