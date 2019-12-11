@@ -1,5 +1,6 @@
 # Affect-based Intrinsic Rewards for Learning General Representations  
-This a work in progress. Official code repository for the paper, arxiv link will be uploaded soon.
+This repository is a work in progress.  
+Official code repository for [https://arxiv.org/abs/1912.00403](https://arxiv.org/abs/1912.00403).  
   
 ### System Requirements  
   
@@ -27,7 +28,7 @@ For more information on how to manage conda environments, please refer to:
   
 For the simulation environment, we used [AirSim](https://github.com/Microsoft/AirSim).  
 Since the compiled simulation is too heavy to upload, we encourage you to compile AirSim and play with it.  
-To assemble the exact environment we've been working on, you can download our map and JSON files from:  
+To assemble the exact environment we had been working on, you can download our map and JSON files from:  
 [link to maps and jsons]  
   
 ### Training  
@@ -40,7 +41,12 @@ To record the data for imitation learning, the following script will drive and r
   
 If this repository helped you in your research, please consider citing:  
 ```  
-BIBtex
+@article{zadok2019affect,
+  title={Affect-based Intrinsic Rewards for Learning General Representations},
+  author={Zadok, Dean and McDuff, Daniel and Kapoor, Ashish},
+  journal={arXiv preprint arXiv:1912.00403},
+  year={2019}
+}
 ```  
 
 ### Acknowledgments  
