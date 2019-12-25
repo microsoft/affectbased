@@ -12,11 +12,10 @@ from utils import import_data
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_file', '-data_file', help='path to raw data folder, use ; for multiple data files', default='C:\\Users\\user\\Documents\\experiments\\data_collection_recordings\\il_curious_6.0\\il_curious_6.0.h5', type=str)
 parser.add_argument('--output_dir', '-output_dir', help='path to output folder', default='C:\\Users\\user\\Documents\\models\\test_residual_01', type=str)
-parser.add_argument('--method', '-method', help='choose from [restoration, prediction]', default="restoration", type=str)
 parser.add_argument('--batch_size', '-batch_size', help='number of samples in one minibatch', default=32, type=int)
 parser.add_argument('--num_imgs', '-num_imgs', help='number of images to train on', default=50000, type=int)
 parser.add_argument('--random_sample', '-random_sample', dest='random_sample', help='if to randomly sample num_imgs from batch', action='store_true')
-parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=41, type=int)
+parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=40, type=int)
 parser.add_argument('--cp_interval', '-cp_interval', help='interval for checkpoint saving', default=20, type=int)
 parser.add_argument('--n_z', '-n_z', help='size of the each one of the parameters [mean,stddev] in the latent space', default=8, type=int)
 parser.add_argument('--res', '-res', help='destination resolution for images in the cooked data. if 0, do nothing', default=64, type=int)
@@ -62,10 +61,7 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
 
 # get train and test datasets
-if args.method == "restoration":
-    train_ds, test_ds = import_data.load_dataset_for_frame_restoration(args.data_file, args.num_imgs, args.batch_size, random_sample=args.random_sample)
-else:
-    train_ds, test_ds = import_data.load_dataset_for_frame_prediction(args.data_file, args.num_imgs, args.batch_size)
+train_ds, test_ds = import_data.load_dataset_for_frame_restoration(args.data_file, args.num_imgs, args.batch_size, random_sample=args.random_sample)
 
 # create model, loss and optimizer
 model = VAEModel(n_z=args.n_z, out_channels=3)
@@ -99,8 +95,8 @@ for epoch in range(args.epochs):
         tf.summary.scalar('Test KL loss', test_kl_loss.result(), step=epoch)
 
     # save model
-    if epoch % args.cp_interval == 0 and epoch > 0:
+    if (epoch+1) % args.cp_interval == 0 and epoch > 0:
         print('Saving weights to {}'.format(args.output_dir))
-        model.save_weights(os.path.join(args.output_dir, "vaemodel{}.ckpt".format(epoch)))
+        model.save_weights(os.path.join(args.output_dir, "vaemodel{}.ckpt".format(epoch+1)))
     
     print('Epoch {}, Loss: {}, KL-Loss: {}, Test Loss: {}, Test KL-Loss: {}'.format(epoch+1, train_rec_loss.result(), train_kl_loss.result(), test_rec_loss.result(), test_kl_loss.result()))

@@ -15,7 +15,8 @@ parser.add_argument('--output_dir', '-output_dir', help='path to output folder',
 parser.add_argument('--num_imgs', '-num_imgs', help='number of images to train on', default=50000, type=int)
 parser.add_argument('--num_actions', '-num_actions', help='number of actions for the model to perdict', default=5, type=int)
 parser.add_argument('--batch_size', '-batch_size', help='number of samples in one minibatch', default=32, type=int)
-parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=41, type=int)
+parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=40, type=int)
+parser.add_argument('--gpu', '-gpu', help='gpu number to train on', default='0', type=str)
 args = parser.parse_args()
 
 # tf function to train
@@ -43,6 +44,7 @@ if __name__ == "__main__":
 
     # allow growth is possible using an env var in tf2.0
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+    os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
 
     # load train and test datasets
     train_ds, test_ds = import_data.load_dataset_for_imitation_model(args.data_file, args.num_imgs, args.batch_size)
@@ -84,8 +86,8 @@ if __name__ == "__main__":
                 tf.summary.scalar('Test accuracy', test_accuracy.result()*100, step=test_counter)
         
         # save model
-        if epoch % 5 == 0 and epoch > 0:
+        if (epoch+1) % 5 == 0 and epoch > 0:
             print('Saving weights to {}'.format(args.output_dir))
-            model.save_weights(os.path.join(args.output_dir, "model{}.ckpt".format(epoch)))
+            model.save_weights(os.path.join(args.output_dir, "model{}.ckpt".format(epoch+1)))
         
         print('Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'.format(epoch+1, train_loss.result(), train_accuracy.result()*100, test_loss.result(), test_accuracy.result()*100))

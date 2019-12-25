@@ -12,7 +12,6 @@ for i in {20..29}; do
 	
 	for j in {00..49}; do
 		files_to_train=$files_to_train${files_shuffled[10#$j]}";"
-		#echo $files_to_train
 		python methods/vae/train.py --data_file $files_to_train --output_dir $dest_path"/"$method"/"$i"/"$j;
 	done
 done

@@ -128,5 +128,3 @@ while True:
 
     if idx % 200 == 0:
         print("{} images recorded".format(idx))
-
-    #time.sleep(0.2)

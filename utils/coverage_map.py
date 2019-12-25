@@ -46,13 +46,6 @@ class CoverageMap:
     # get the entire map, rescaled to the input size
     def get_map_scaled(self):
 
-        # manual resize
-        #binary_map = np.zeros((self.input_size, self.input_size))
-        #step_size = int(self.map_size / self.input_size)
-        #for i in range(self.input_size):
-        #    for j in range(self.input_size):
-        #        binary_map[i,j] = self.cov_map[i*step_size:(i+1)*step_size,j*step_size:(j+1)*step_size].mean()
-
         # resize coverage image using PIL
         im = Image.fromarray(np.uint8(self.cov_map))
         im = im.resize((self.input_size,self.input_size), Image.BILINEAR)
@@ -193,11 +186,6 @@ class CoverageMap:
             points_trimmed[:,1] = np.add(pose[1],np.rint(points_trimmed[:,1] * 100.0 / self.scale_ratio))
             points_trimmed = points_trimmed.astype(int)
 
-            # randomly remove lidar points
-            #max_points = points_trimmed.shape[0]-10
-            #rejected_idxs = np.random.permutation(points_trimmed.shape[0])[:max_points]
-            #points_trimmed = np.delete(points_trimmed, rejected_idxs, axis=0)
-
             # paint selected indexes, and sum new pixels
             new_pixels = 0
             for i in range(points_trimmed.shape[0]):
@@ -242,15 +230,8 @@ def transform_depth_input(responses):
 
         img1d = 255/np.maximum(np.ones(img1d.size), img1d)
         img2d = np.reshape(img1d, (responses[0].height, responses[0].width))
-
         image = Image.fromarray(img2d)
-
-        # debug only
-        #image_png = image.convert('RGB')
-        #image_png.save("DistributedRL\\debug\\{}.png".format(time.time()))
-
         im_final = np.array(image.resize((84, 84)).convert('L')) 
-        #im_final = im_final / 255.0
 
         return im_final
 
@@ -285,8 +266,6 @@ if __name__ == "__main__":
 
         # present fps or reward
         fps_sum += (1/(endTime-startTime))
-        #print("fps average: %.2f" % (fps_sum/i))
-        #if i % 10 == 0:
         print("reward: {}".format(reward))
 
         i+=1

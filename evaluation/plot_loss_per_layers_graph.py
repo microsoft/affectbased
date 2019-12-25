@@ -56,5 +56,4 @@ else:
     plt.title('Loss per epochs')
     
 plt.grid(True)
-plt.show()
-#plt.savefig(os.path.join(os.path.dirname(args.csv_path),"losses_layers.svg"))
+plt.savefig(os.path.join(os.path.dirname(args.csv_path),"losses_layers.svg"))

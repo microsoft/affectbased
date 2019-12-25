@@ -15,7 +15,7 @@ parser.add_argument('--n_z', '-n_z', help='size of the each one of the parameter
 parser.add_argument('--img', '-img', help='image file path', default='C:\\Users\\user\\Documents\\Data\\cv\\randompose_rgb_segmentation\\recordings_01\\images\\cont_15715113413696584.png', type=str)
 parser.add_argument('--res', '-res', help='destination resolution for images in the cooked data. if 0, do nothing', default=64, type=int)
 parser.add_argument('--show', '-show', help='choose what to do from [predict, inter]', default='predict', type=str)
-parser.add_argument('--method', '-method', help='choose what to do from [restoration, depth, flow]', default='restoration', type=str)
+parser.add_argument('--method', '-method', help='choose what to do from [restoration, depth, con2rgb]', default='restoration', type=str)
 parser.add_argument('--grayscale', '-grayscale', dest='grayscale', help='choose for training on grayscale images', action='store_true')
 args = parser.parse_args()
 
@@ -83,11 +83,9 @@ else:
 
     # present predicted image
     predicted_image = prediction.numpy().squeeze(axis=0)
-    if args.method == 'restoration':
-        predicted_image = Image.fromarray(np.uint8(predicted_image*255))
-    elif args.method == 'depth':
+    if args.method == 'depth':
         predicted_image = predicted_image.squeeze(axis=-1)
         predicted_image = Image.fromarray(np.uint8(predicted_image*255))
-    else: # args.method == 'flow'
+    else: # args.method == 'restoration or con2rgb'
         predicted_image = Image.fromarray(np.uint8(predicted_image*255))
     predicted_image.show()

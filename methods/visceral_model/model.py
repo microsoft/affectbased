@@ -4,9 +4,8 @@ from tensorflow.keras.layers import Dense, Flatten, Conv2D, BatchNormalization, 
 
 # model definition class
 class VisceralModel(Model):
-    def __init__(self, num_outputs=2, vel=False):
+    def __init__(self, num_outputs=2):
         super(VisceralModel, self).__init__()
-        self.vel = vel
 
         # Convolution stack
         self.conv1 = Conv2D(filters=32, kernel_size=5, strides=2, activation='relu')
@@ -18,8 +17,6 @@ class VisceralModel(Model):
 
         # FC stack
         self.flatten = Flatten()
-        if self.vel:
-            self.concat = Concatenate()
         self.d1 = Dense(2048, activation='relu')
         self.bn5 = BatchNormalization(momentum=0.9, epsilon=1e-5)
         self.d2 = Dense(num_outputs)
@@ -31,8 +28,6 @@ class VisceralModel(Model):
         x = self.bn3(self.conv3(x))
         
         x = self.flatten(x)
-        if self.vel:
-            x = self.concat([x,x2])
         x = self.bn5(self.d1(x))
         x = self.d2(x)
 

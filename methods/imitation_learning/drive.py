@@ -88,6 +88,4 @@ if __name__ == "__main__":
         print('steering = {}, actions_p = {}'.format(car_controls.steering, np.around(action_values,decimals=3)[0]))
             
         if keyboard.is_pressed('q'):  # if key 'q' is pressed
-            if args.store != "":
-                airsim_rec.close()
             sys.exit()

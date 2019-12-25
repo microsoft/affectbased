@@ -15,9 +15,8 @@ import argparse
 import cv2
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--camera', '-camera', help='type of the camera. choose from [rgb, depth, grayscale]', default='grayscale', type=str)
+parser.add_argument('--camera', '-camera', help='type of the camera. choose from [rgb, depth, grayscale]', default='rgb', type=str)
 parser.add_argument('--dest_dir', '-dest_dir', help='destination folder path', default='C:\\Users\\user\\Documents\\AirSim', type=str)
-parser.add_argument('--cov_size', '-cov_size', help='size of the coverage map in input. 0 if none', default=0, type=int)
 args = parser.parse_args()
 
 # connect to the AirSim simulator
@@ -25,11 +24,6 @@ client = airsim.CarClient()
 client.confirmConnection()
 client.enableApiControl(True)
 car_controls = airsim.CarControls()
-
-# create coverage map and connect to client
-if args.cov_size > 0:
-    covMap = CoverageMap(map_size=64000, scale_ratio=20, state_size=6000, input_size=args.cov_size, height_threshold=0.9, reward_norm=30, paint_radius=15)
-    covMap.set_client(client=client)
 
 # create experiments directories and meta-data file
 experiment_dir = os.path.join(args.dest_dir, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
@@ -75,7 +69,7 @@ while True:
         img1d = 255/np.maximum(np.ones(img1d.size), img1d)
         if img1d.size > 1:
             img2d = np.reshape(img1d, (responses[0].height, responses[0].width))
-            image = Image.fromarray(img2d)
+            image = Image.fromarray(img2d)  
             image_np = np.array(image.resize((84, 84)).convert('L')) 
         else:
             image_np = np.zeros((84,84)).astype(float)
@@ -89,25 +83,11 @@ while True:
             if args.camera == 'grayscale':
                 image = image.convert('L')
             image_np = np.array(image.resize((84, 84)))
-            
         else:
             if args.camera == 'grayscale':
                 image_np = np.zeros((84,84)).astype(float)
             else:
                 image_np = np.zeros((84,84,3)).astype(float)
-
-    # get coverage image
-    if args.cov_size > 0:
-        cov_image, reward, _ = covMap.get_state_from_pose()
-        #print("reward: {}".format(reward))
-
-        # combine both inputs
-        if args.camera == 'depth' or args.camera == 'grayscale':
-            image_np[:cov_image.shape[0],:cov_image.shape[1]] = cov_image
-        else:
-            cov_rgb_image = np.expand_dims(cov_image, axis=2)
-            cov_rgb_image = np.repeat(cov_rgb_image, 3, axis=2)
-            image_np[:cov_rgb_image.shape[0],:cov_rgb_image.shape[1],:] = cov_rgb_image
 
     # save the image
     im = Image.fromarray(np.uint8(image_np))
@@ -131,4 +111,3 @@ while True:
         quit()
 	
     idx += 1
-    #time.sleep(0.2)

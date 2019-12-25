@@ -10,6 +10,7 @@ import glob
 import random
 from PIL import Image
 
+
 def prepare_h5_file_for_imitation_model(dset_folder, res, buffer_size, images_gap):
 
     # list of all recordings data_folders
@@ -56,15 +57,14 @@ def prepare_h5_file_for_imitation_model(dset_folder, res, buffer_size, images_ga
         f.create_dataset("images", data=images_np, dtype=images_np.dtype)
         f.create_dataset("labels", data=labels_np, dtype=labels_np.dtype)
 
-def prepare_h5_file_for_visceral_model(dset_file, res, grayscale=False, vel=False, cov_size=0):
+
+def prepare_h5_file_for_visceral_model(dset_file, res, grayscale=False):
 
     # open dataset text files
     dataset_txt = open(dset_file,"r")
 
     # extract data from train text file
     images, labels = [], []
-    if vel == True:
-        velocities = []
 
     for i, line in enumerate(dataset_txt):
         # get image
@@ -76,17 +76,6 @@ def prepare_h5_file_for_visceral_model(dset_file, res, grayscale=False, vel=Fals
             im = im.convert("RGB")
         image_np = np.array(im, dtype=np.float32) / 255.0
 
-        # get cov image
-        if cov_size > 0:
-            cov_path = image_path.replace("img__","cov__").replace("\\images\\", "\\covs\\")
-            cov_im = Image.open(cov_path).resize((cov_size,cov_size), Image.BILINEAR)
-            cov_np = np.array(cov_im, dtype=np.float32) / 255.0
-            if grayscale:
-                image_np[:cov_size,:cov_size] = cov_np
-            else:
-                cov_np = np.repeat(np.expand_dims(cov_np, axis=-1), repeats=3, axis=-1)
-                image_np[:cov_size,:cov_size,:] = cov_np
-
         images.append(image_np)
 
         # get label as [positive_value, negative_value]
@@ -95,31 +84,20 @@ def prepare_h5_file_for_visceral_model(dset_file, res, grayscale=False, vel=Fals
         label_np = np.array([pos_emotion,neg_emotion], dtype=np.float32)
         labels.append(label_np)
 
-        # add velocity to h5 file
-        if vel:
-            velocity_val = float(line.split("\t")[3].split("\n")[0])
-            velocity_np = np.array([velocity_val], dtype=np.float32)
-            velocities.append(velocity_np)
-
         if i % 1000 == 0:
             print("processing {} images".format(i))
 
     # define trainset numpy
     images_np = np.array(images, dtype=np.float32)
     labels_np = np.array(labels, dtype=np.float32)
-    if vel:
-        velocities_np = np.array(velocities, dtype=np.float32)
 
     # write h5 file to the same location
     dest_filename = dset_file.split('/')[-1].split('\\')[-1].split('.')[0]
-    if cov_size > 0:
-        dest_filename = dest_filename + "_cov"
     dest_dir = os.path.dirname(os.path.normpath(dset_file))
     with h5py.File(os.path.join(dest_dir,"{}.h5".format(dest_filename)), "w") as f:
         f.create_dataset("images", data=images_np, dtype=images_np.dtype)
         f.create_dataset("labels", data=labels_np, dtype=labels_np.dtype)
-        if vel:
-            f.create_dataset("velocities", data=velocities_np, dtype=velocities_np.dtype)
+
 
 def prepare_h5_for_frame_restoration(dset_folder, res):
     
@@ -149,33 +127,6 @@ def prepare_h5_for_frame_restoration(dset_folder, res):
     with h5py.File(os.path.join(dset_folder,"{}.h5".format(dest_filename)), "w") as f:
         f.create_dataset("images", data=images_np, dtype=images_np.dtype)
 
-def prepare_h5_for_frames_prediction(dset_folder, res, frames):
-    
-    # list of all recordings data_folders
-    data_folders = [name for name in os.listdir(dset_folder) if os.path.isdir(os.path.join(dset_folder, name))]
-    data_folders = [os.path.join(dset_folder, f) for f in data_folders]
-
-    images_all = []
-    for folder in data_folders:
-        print('Reading data from {0}...'.format(folder))
-        current_df = pd.read_csv(os.path.join(folder, 'airsim_rec.txt'), sep='\t')
-
-        for i in range(0, current_df.shape[0], 1):
-            # store image
-            im = Image.open(os.path.join(os.path.join(folder, 'images'), current_df.iloc[i]['ImageFile']))
-            if res > 0:
-                im = im.resize((res,res), Image.BILINEAR)
-            im_np = np.array(im, dtype=np.float32) / 255.0
-            images_all.append(im_np)
-
-    images_np = np.array(images_all, dtype=np.float32)
-    if len(images_np.shape) == 3:
-        images_np = np.expand_dims(images_np, axis=-1)
-
-    # write h5 file to the same location
-    dest_filename = os.path.basename(os.path.normpath(dset_folder))
-    with h5py.File(os.path.join(dset_folder,"{}.h5".format(dest_filename)), "w") as f:
-        f.create_dataset("images", data=images_np, dtype=images_np.dtype)
 
 def prepare_h5_for_frame_restoration_trial_separated(dset_folder, res, cov_t):
     
@@ -221,45 +172,6 @@ def prepare_h5_for_frame_restoration_trial_separated(dset_folder, res, cov_t):
         with h5py.File(os.path.join(dset_folder,"{}_{}.h5".format(dest_filename, i)), "w") as f:
             f.create_dataset("images", data=images_set_np, dtype=images_set_np.dtype)
 
-
-def prepare_h5_for_frame_prediction(dset_folder, res, images_gap):
-    
-    # list of all recordings data_folders
-    data_folders = [name for name in os.listdir(dset_folder) if os.path.isdir(os.path.join(dset_folder, name))]
-    data_folders = [os.path.join(dset_folder, f) for f in data_folders]
-
-    images_all = []
-    target_images_all = []
-    for folder in data_folders:
-        print('Reading data from {0}...'.format(folder))
-        current_df = pd.read_csv(os.path.join(folder, 'airsim_rec.txt'), sep='\t')
-
-        for i in range(0, current_df.shape[0] - images_gap, 1):
-            # store images
-            im = Image.open(os.path.join(os.path.join(folder, 'images'), current_df.iloc[i]['ImageFile']))
-            if res > 0:
-                im = im.resize((res,res), Image.BILINEAR)
-            im_np = np.array(im, dtype=np.float32) / 255.0
-            images_all.append(im_np)
-
-            # store future image
-            im = Image.open(os.path.join(os.path.join(folder, 'images'), current_df.iloc[i+images_gap]['ImageFile']))
-            if res > 0:
-                im = im.resize((res,res), Image.BILINEAR)
-            im_np = np.array(im, dtype=np.float32) / 255.0
-            target_images_all.append(im_np)            
-
-    images_np = np.array(images_all, dtype=np.float32)
-    target_images_np = np.array(target_images_all, dtype=np.float32)
-    if len(images_np.shape) == 3:
-        images_np = np.expand_dims(images_np, axis=-1)
-        target_images_np = np.expand_dims(target_images_np, axis=-1)
-
-    # write h5 file to the same location
-    dest_filename = os.path.basename(os.path.normpath(dset_folder))
-    with h5py.File(os.path.join(dset_folder,"{}_prediction_{}.h5".format(dest_filename,images_gap)), "w") as f:
-        f.create_dataset("images", data=images_np, dtype=images_np.dtype)
-        f.create_dataset("target_images", data=target_images_np, dtype=target_images_np.dtype)
 
 def prepare_h5_for_depth_estimation(dset_folder, res, num_imgs=100000):
     
@@ -428,120 +340,6 @@ def prepare_h5_for_rgb_creation(dset_folder, res, num_imgs=100000):
         f.create_dataset("rgbs", data=images_np, dtype=images_np.dtype)
         f.create_dataset("images", data=conts_np, dtype=conts_np.dtype)
 
-def prepare_h5_for_flow_estimation(dset_folder, res, num_imgs=100000):
-    
-    # list of all recordings data_folders
-    data_folders = [name for name in os.listdir(dset_folder) if os.path.isdir(os.path.join(dset_folder, name))]
-    data_folders = [os.path.join(dset_folder, f) for f in data_folders]
-
-    images_all = []
-    nexts_all = []
-    flows_all = []
-    for folder in data_folders:
-        print('Reading data from {0}...'.format(folder))
-        current_df = pd.read_csv(os.path.join(folder, 'airsim_rec.txt'), sep='\t')
-
-        for i in range(0, current_df.shape[0], 1):
-            image_path = os.path.join(os.path.join(folder, 'images'), current_df.iloc[i]['ImageFile'])
-
-            # store source image
-            im = Image.open(image_path)
-            if res > 0:
-                im = im.resize((res,res), Image.BILINEAR)
-            im_np = np.array(im, dtype=np.float32) / 255.0
-            images_all.append(im_np)
-
-            # store next image
-            next_im = Image.open(image_path.replace("\\im_","\\next_").replace("/im_","/next_"))
-            if res > 0:
-                next_im = next_im.resize((res,res), Image.BILINEAR)
-            next_np = np.array(next_im, dtype=np.float32) / 255.0
-            nexts_all.append(next_np)
-
-            # store flow map numpy
-            flow_im = np.load(image_path.replace("\\im_","\\flow_").replace("/im_","/flow_").replace(".png",".npy"))
-            flows_all.append(flow_im)
-
-    images_np = np.array(images_all, dtype=np.float32)
-    nexts_np = np.array(nexts_all, dtype=np.float32)
-    flows_np = np.array(flows_all, dtype=np.float32)
-    if len(images_np.shape) == 3:
-        images_np = np.expand_dims(images_np, axis=-1)
-    if len(nexts_np.shape) == 3:
-        nexts_np = np.expand_dims(nexts_np, axis=-1)
-    if len(flows_np.shape) == 3:
-        flows_np = np.expand_dims(flows_np, axis=-1)
-    
-    # shuffle images and labels in the same order
-    p = np.random.permutation(images_np.shape[0])
-    images_np = images_np[p]
-    nexts_np = nexts_np[p]
-    flows_np = flows_np[p]
-
-    # trim data if asked to
-    if images_np.shape[0] > num_imgs:
-        images_np = images_np[:num_imgs,:,:,:]
-        nexts_np = nexts_np[:num_imgs,:,:,:]
-        flows_np = flows_np[:num_imgs,:,:,:]
-
-    # write h5 file to the same location
-    dest_filename = os.path.basename(os.path.normpath(dset_folder))
-    with h5py.File(os.path.join(dset_folder,"{}_{}.h5".format(dest_filename,num_imgs)), "w") as f:
-        f.create_dataset("images", data=images_np, dtype=images_np.dtype)
-        f.create_dataset("nexts", data=nexts_np, dtype=nexts_np.dtype)
-        f.create_dataset("flows", data=flows_np, dtype=flows_np.dtype)
-
-def prepare_h5_for_frame_prediction(dset_folder, res, num_imgs=100000):
-    
-    # list of all recordings data_folders
-    data_folders = [name for name in os.listdir(dset_folder) if os.path.isdir(os.path.join(dset_folder, name))]
-    data_folders = [os.path.join(dset_folder, f) for f in data_folders]
-
-    images_all = []
-    nexts_all = []
-    for folder in data_folders:
-        print('Reading data from {0}...'.format(folder))
-        current_df = pd.read_csv(os.path.join(folder, 'airsim_rec.txt'), sep='\t')
-
-        for i in range(0, current_df.shape[0], 1):
-            image_path = os.path.join(os.path.join(folder, 'images'), current_df.iloc[i]['ImageFile'])
-
-            # store source image
-            im = Image.open(image_path)
-            if res > 0:
-                im = im.resize((res,res), Image.BILINEAR)
-            im_np = np.array(im, dtype=np.float32) / 255.0
-            images_all.append(im_np)
-
-            # store next image
-            next_im = Image.open(image_path.replace("\\im_","\\next_").replace("/im_","/next_"))
-            if res > 0:
-                next_im = next_im.resize((res,res), Image.BILINEAR)
-            next_np = np.array(next_im, dtype=np.float32) / 255.0
-            nexts_all.append(next_np)
-
-    images_np = np.array(images_all, dtype=np.float32)
-    nexts_np = np.array(nexts_all, dtype=np.float32)
-    if len(images_np.shape) == 3:
-        images_np = np.expand_dims(images_np, axis=-1)
-    if len(nexts_np.shape) == 3:
-        nexts_np = np.expand_dims(nexts_np, axis=-1)
-    
-    # shuffle images and labels in the same order
-    p = np.random.permutation(images_np.shape[0])
-    images_np = images_np[p]
-    nexts_np = nexts_np[p]
-
-    # trim data if asked to
-    if images_np.shape[0] > num_imgs:
-        images_np = images_np[:num_imgs,:,:,:]
-        nexts_np = nexts_np[:num_imgs,:,:,:]
-
-    # write h5 file to the same location
-    dest_filename = os.path.basename(os.path.normpath(dset_folder))
-    with h5py.File(os.path.join(dset_folder,"{}_{}.h5".format(dest_filename,num_imgs)), "w") as f:
-        f.create_dataset("images", data=images_np, dtype=images_np.dtype)
-        f.create_dataset("nexts", data=nexts_np, dtype=nexts_np.dtype)
 
 def prepare_h5_from_images_folder(dset_folder, res):
 
@@ -559,6 +357,7 @@ def prepare_h5_from_images_folder(dset_folder, res):
     dest_filename = os.path.basename(os.path.normpath(dset_folder))
     with h5py.File(os.path.join(dset_folder,"{}.h5".format(dest_filename)), "w") as f:
         f.create_dataset("images", data=images_np, dtype=images_np.dtype)
+
 
 def get_starting_points(points_path):
 
@@ -585,6 +384,7 @@ def get_starting_points(points_path):
     
     return rel_points
 
+
 def get_random_navigable_point(log_path):
     
     if log_path != "":
@@ -609,6 +409,7 @@ def get_random_navigable_point(log_path):
         return rel_point, orientation
     else: #-0.5*math.pi
         return [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]
+
 
 def load_dataset_for_imitation_model(dset_file, num_imgs, batch_size):
 
@@ -636,7 +437,8 @@ def load_dataset_for_imitation_model(dset_file, num_imgs, batch_size):
 
     return train_ds, test_ds
 
-def load_dataset_for_visceral_model(dset_file, batch_size, pred_method, vel):
+
+def load_dataset_for_visceral_model(dset_file, batch_size, pred_method):
 
     # load h5 file
     dataset_dict = h5py.File(dset_file, 'r')
@@ -644,9 +446,6 @@ def load_dataset_for_visceral_model(dset_file, batch_size, pred_method, vel):
     # get dataset as numpy
     images_dataset = np.asarray(dataset_dict['images'], dtype=np.float32)
     labels_dataset = np.asarray(dataset_dict['labels'], dtype=np.float32)
-    if vel:
-        velocities_dataset = np.asarray(dataset_dict['velocities'], dtype=np.float32) / 20.0
-        velocities_dataset = np.clip(velocities_dataset, -1.0, 1.0)
 
     if len(images_dataset.shape) < 4:
         images_dataset = np.expand_dims(images_dataset, axis=-1)
@@ -660,19 +459,14 @@ def load_dataset_for_visceral_model(dset_file, batch_size, pred_method, vel):
     p = np.random.permutation(images_dataset.shape[0])
     images_dataset = images_dataset[p]
     labels_dataset = labels_dataset[p]
-    if vel:
-        velocities_dataset = velocities_dataset[p]
 
     # convert to tf format dataset and prepare batches
     test_split = int(images_dataset.shape[0] * 0.1)
-    if vel:
-        train_ds = tf.data.Dataset.from_tensor_slices((images_dataset[:-test_split,:,:,:],velocities_dataset[:-test_split,:],labels_dataset[:-test_split,:])).batch(batch_size)
-        test_ds = tf.data.Dataset.from_tensor_slices((images_dataset[-test_split:,:,:,:],velocities_dataset[-test_split:,:],labels_dataset[-test_split:,:])).batch(batch_size)
-    else:      
-        train_ds = tf.data.Dataset.from_tensor_slices((images_dataset[:-test_split,:,:,:],labels_dataset[:-test_split,:])).batch(batch_size)
-        test_ds = tf.data.Dataset.from_tensor_slices((images_dataset[-test_split:,:,:,:],labels_dataset[-test_split:,:])).batch(batch_size)
+    train_ds = tf.data.Dataset.from_tensor_slices((images_dataset[:-test_split,:,:,:],labels_dataset[:-test_split,:])).batch(batch_size)
+    test_ds = tf.data.Dataset.from_tensor_slices((images_dataset[-test_split:,:,:,:],labels_dataset[-test_split:,:])).batch(batch_size)
 
     return train_ds, test_ds
+
 
 def load_dataset_for_frame_restoration(dset_file, num_imgs, batch_size, random_sample=True):
 
@@ -709,6 +503,7 @@ def load_dataset_for_frame_restoration(dset_file, num_imgs, batch_size, random_s
 
     return train_ds, test_ds
 
+
 def load_dataset_for_training_decoder(dset_file, num_imgs, batch_size, method):
 
     # load h5 file
@@ -739,43 +534,6 @@ def load_dataset_for_training_decoder(dset_file, num_imgs, batch_size, method):
 
     return train_ds, test_ds
 
-def flow_to_img(flow, normalize=True, flow_mag_max=None):
-    """Convert flow to viewable image, using color hue to encode flow vector orientation, and color saturation to
-    encode vector length. This is similar to the OpenCV tutorial on dense optical flow, except that they map vector
-    length to the value plane of the HSV color model, instead of the saturation plane, as we do here.
-    Args:
-        flow: optical flow
-        normalize: Normalize flow to 0..255
-        flow_mag_max: Max flow to map to 255
-    Returns:
-        img: viewable representation of the dense optical flow in RGB format
-        flow_avg: optionally, also return average flow magnitude
-    Ref:
-        - OpenCV 3.0.0-dev documentation » OpenCV-Python Tutorials » Video Analysis »
-        https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html
-    """
-    hsv = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
-    flow_magnitude, flow_angle = cv2.cartToPolar(flow[..., 0].astype(np.float32), flow[..., 1].astype(np.float32))
-
-    # A couple times, we've gotten NaNs out of the above...
-    nans = np.isnan(flow_magnitude)
-    if np.any(nans):
-        nans = np.where(nans)
-        flow_magnitude[nans] = 0.
-
-    # Normalize
-    hsv[..., 0] = flow_angle * 180 / np.pi / 2
-    if normalize is True:
-        if flow_mag_max is None:
-            hsv[..., 1] = cv2.normalize(flow_magnitude, None, 0, 255, cv2.NORM_MINMAX)
-        else:
-            hsv[..., 1] = flow_magnitude * 255 / flow_mag_max
-    else:
-        hsv[..., 1] = flow_magnitude
-    hsv[..., 2] = 255
-    img = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-
-    return img
 
 def create_dataset(data_dir, batch_size, train_size=0, label_type='image'):
 
@@ -820,37 +578,12 @@ def create_dataset(data_dir, batch_size, train_size=0, label_type='image'):
 
     return train_ds, test_ds
 
-def add_velocity_to_data_file(dset_file):
-    
-    # open dataset text files
-    dataset_txt = open(dset_file,"r")
-    dset_file_dir = os.path.dirname(dset_file)
-    dset_file_name = "".join(os.path.basename(dset_file).split('.')[:-1])
-    dataset_txt_velocity = open(os.path.join(dset_file_dir,dset_file_name+"_vel.txt"),"w")
-
-    for i, line in enumerate(dataset_txt):
-        im_dir = os.path.dirname(os.path.dirname(line.split('\t')[0]))
-        im_name = os.path.basename(line.split('\t')[0])
-        
-        # get velocity for image
-        airsim_rec = pd.read_csv(os.path.join(im_dir, 'airsim_rec.txt'), sep='\t')
-        velocity_val = float(airsim_rec.loc[airsim_rec['ImageFile'] == im_name]['Speed'])
-
-        # write line to the new txt file
-        line_with_vel = line.split('\n')[0] + '\t' + str(velocity_val) + '\n'
-        dataset_txt_velocity.write(line_with_vel)
-
-        if i % 1000 == 0:
-            print("processing {} lines".format(i))
-    
-    dataset_txt.close()
-    dataset_txt_velocity.close()
-
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dset_file', '-dset_file', help='path to dataset file', default='C:\\Users\\user\\Documents\\Data\\VisceralMachines\\TrainingFiles\\data_mazeonly_frame_2s_window_noclipping2_07_12_19.txt', type=str)
+    parser.add_argument('--method', '-method', help='choose method to prepare h5 file from [imitation, visceral, frame_res, frame_res_sep, depth, segmentation, con2rgb, images_dir]', default='C:\\Users\\user\\Documents\\Data\\VisceralMachines\\TrainingFiles\\data_mazeonly_frame_2s_window_noclipping2_07_12_19.txt', type=str)
+    parser.add_argument('--dset_file', '-dset_file', help='path to dataset file for visceral model', default='C:\\Users\\user\\Documents\\Data\\VisceralMachines\\TrainingFiles\\data_mazeonly_frame_2s_window_noclipping2_07_12_19.txt', type=str)
     parser.add_argument('--dset_dir', '-dset_dir', help='path to dataset folder', default='C:\\Users\\user\\Documents\\Data\\cv\\randompose_rgb_segmentation', type=str)
     parser.add_argument('--res', '-res', help='destination resolution for images in the cooked data. if 0, do nothing', default=64, type=int)
     parser.add_argument('--buffer_size', '-buffer_size', help='number of images in one sample', default=4, type=int)
@@ -860,15 +593,19 @@ if __name__ == "__main__":
     parser.add_argument('--cov_t', '-cov_t', help='coverage threshold. to cope with too short segments', default=100, type=int)
     args = parser.parse_args()
 
-    #prepare_h5_file_for_visceral_model(args.dset_file, args.res, cov_size=20)
-    #prepare_h5_file_for_imitation_model(args.dset_dir, args.res, args.buffer_size, args.images_gap)
-    #add_velocity_to_data_file(args.dset_file)
-    #prepare_h5_for_frame_restoration(args.dset_dir, args.res)
-    #prepare_h5_for_frame_restoration_trial_separated(args.dset_dir, args.res, args.cov_t)
-    #prepare_h5_for_frame_prediction(args.dset_dir, args.res, args.images_gap)
-    #prepare_h5_for_depth_estimation(args.dset_dir, args.res, num_imgs=2000)
-    #prepare_h5_for_semantic_segmentation(args.dset_dir, args.res, num_imgs=2000)
-    prepare_h5_for_rgb_creation(args.dset_dir, args.res, num_imgs=2000)
-    #prepare_h5_for_flow_estimation(args.dset_dir, args.res, num_imgs=2000)
-    #prepare_h5_for_frame_prediction(args.dset_dir, args.res, num_imgs=2000)
-    #prepare_h5_from_images_folder(args.dset_dir, args.res)
+    if args.method == 'imitation':
+        prepare_h5_file_for_imitation_model(args.dset_dir, args.res, args.buffer_size, args.images_gap)
+    elif args.method == 'visceral':
+        prepare_h5_file_for_visceral_model(args.dset_file, args.res)
+    elif args.method == 'frame_res':
+        prepare_h5_for_frame_restoration(args.dset_dir, args.res)
+    elif args.method == 'frame_res_sep':
+        prepare_h5_for_frame_restoration_trial_separated(args.dset_dir, args.res, args.cov_t)
+    elif args.method == 'depth':
+        prepare_h5_for_depth_estimation(args.dset_dir, args.res, num_imgs=2000)
+    elif args.method == 'segmentation':
+        prepare_h5_for_semantic_segmentation(args.dset_dir, args.res, num_imgs=2000)
+    elif args.method == 'con2rgb':    
+        prepare_h5_for_rgb_creation(args.dset_dir, args.res, num_imgs=2000)
+    else: # images_dir
+        prepare_h5_from_images_folder(args.dset_dir, args.res)
