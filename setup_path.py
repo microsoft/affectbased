@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # Import this module to automatically setup path to local airsim module
 # This module first tries to see if airsim module is installed via pip
 # If it does then we don't do anything else
