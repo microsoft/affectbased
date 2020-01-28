@@ -1,4 +1,4 @@
-tensorflow-gpu==2.0.0
+tensorflow-gpu==2.0.1
 opencv-python==4.1.0.25
 keyboard
 msgpack-rpc-python
