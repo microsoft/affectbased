@@ -88,9 +88,9 @@ if __name__ == "__main__":
                 tf.summary.scalar('Test loss', test_loss.result(), step=test_counter)
                 tf.summary.scalar('Test accuracy', test_accuracy.result()*100, step=test_counter)
         
+        print('Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'.format(epoch+1, train_loss.result(), train_accuracy.result()*100, test_loss.result(), test_accuracy.result()*100))
+        
         # save model
         if (epoch+1) % 5 == 0 and epoch > 0:
             print('Saving weights to {}'.format(args.output_dir))
             model.save_weights(os.path.join(args.output_dir, "model{}.ckpt".format(epoch+1)))
-        
-        print('Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'.format(epoch+1, train_loss.result(), train_accuracy.result()*100, test_loss.result(), test_accuracy.result()*100))

@@ -13,7 +13,6 @@ import pprint
 import keyboard  # using module keyboard
 import math
 from PIL import Image
-from coverage_map import CoverageMap
 import argparse
 import cv2
 

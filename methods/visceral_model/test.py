@@ -16,7 +16,7 @@ import time
 import keyboard
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path', '-model_path', help='model file path', default='C:\\Users\\user\\Documents\\models\\visceral_models\\visceral_model_84_reg_both_norm_2s_noclipping2_newdata\\vismodel40.ckpt', type=str)
+parser.add_argument('--model_path', '-model_path', help='model file path', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Models\\visceral_models\\visceral_model_84_reg_both_norm_2s_noclipping2_newdata\\vismodel40.ckpt', type=str)
 parser.add_argument('--debug', '-debug', dest='debug', help='debug mode, present camera on screen', action='store_true')
 parser.add_argument('--res', '-res', help='destination resolution for images in the cooked data. if 0, do nothing', default=84, type=int)
 parser.add_argument('--mean_size', '-mean_size', help='number of values for mean', default=20, type=int)

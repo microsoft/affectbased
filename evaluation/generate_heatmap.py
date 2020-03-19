@@ -12,9 +12,8 @@ import matplotlib.image as mpimg
 import seaborn as sns; sns.set()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--bg_img', '-bg_img', help='path to background image', default='C:\\Users\\user\\Documents\\experiments\\heatmap\\map_navigable.png', type=str)
-parser.add_argument('--txt_path', '-txt_path', help='path to txt file containing coordinates', default='C:\\Users\\user\\Documents\\experiments\\data_collection_recordings\\il_curious_6.0\\recordings_01\\airsim_rec.txt', type=str)
-parser.add_argument('--dest_path', '-dest_path', help='path to save the heatmap image', default='C:\\Users\\user\\Documents\\experiments\\heatmap\\heatmap_ilcur_raw.png', type=str)
+parser.add_argument('--txt_path', '-txt_path', help='path to txt file containing coordinates', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Experiments\\affect_neg_2.0\\recordings_01\\airsim_rec.txt', type=str)
+parser.add_argument('--dest_path', '-dest_path', help='path to save the heatmap image', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Experiments\\heatmap\\heatmap_ilneg_raw.png', type=str)
 args = parser.parse_args()
 
 # open dataframe and remove unnecessary columns
@@ -37,9 +36,6 @@ for i in range(df.shape[0]):
 cmap_np = np.swapaxes(cmap_np, 0, 1)
 plt.imshow(cmap_np, cmap='hot', interpolation='bicubic')
 plt.axis('off')
-
-# load background image
-bg_img = Image.open(args.bg_img)
 
 # convert heatmap to PIL image
 buffer = io.StringIO()

@@ -97,9 +97,9 @@ for epoch in range(args.epochs):
         tf.summary.scalar('Test reconstruction loss', test_rec_loss.result(), step=epoch)
         tf.summary.scalar('Test KL loss', test_kl_loss.result(), step=epoch)
 
+    print('Epoch {}, Loss: {}, KL-Loss: {}, Test Loss: {}, Test KL-Loss: {}'.format(epoch+1, train_rec_loss.result(), train_kl_loss.result(), test_rec_loss.result(), test_kl_loss.result()))
+    
     # save model
     if (epoch+1) % args.cp_interval == 0 and epoch > 0:
         print('Saving weights to {}'.format(args.output_dir))
         model.save_weights(os.path.join(args.output_dir, "vaemodel{}.ckpt".format(epoch+1)))
-    
-    print('Epoch {}, Loss: {}, KL-Loss: {}, Test Loss: {}, Test KL-Loss: {}'.format(epoch+1, train_rec_loss.result(), train_kl_loss.result(), test_rec_loss.result(), test_kl_loss.result()))

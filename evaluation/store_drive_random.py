@@ -9,7 +9,6 @@ import argparse
 import numpy as np
 import time
 import datetime
-import math
 import cv2
 from utils.coverage_map import CoverageMap
 from utils.import_data import get_random_navigable_point
@@ -19,19 +18,19 @@ import tensorflow as tf
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--il_path', '-il_path', help='imitation learning model file path', default='C:\\Users\\user\\Documents\\models\\imitation_4images_nocov\\model40.ckpt', type=str)
-parser.add_argument('--vis_path', '-vis_path', help='visceral model file path. wont load if empty', default='C:\\Users\\user\\Documents\\models\\visceral_models\\visceral_model_84_reg_both_norm_2s_noclipping2_newdata\\vismodel40.ckpt', type=str)
-parser.add_argument('--output_dir', '-output_dir', help='output folder to put the text file in', default='C:\\Users\\user\\Documents\\AirSim', type=str)
+parser.add_argument('--il_path', '-il_path', help='imitation learning model file path', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Models\\imitation_4images_nocov\\model40.ckpt', type=str)
+parser.add_argument('--vis_path', '-vis_path', help='visceral model file path. wont load if empty', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Models\\visceral_models\\visceral_model_84_reg_both_norm_2s_noclipping2_newdata\\vismodel40.ckpt', type=str)
+parser.add_argument('--output_dir', '-output_dir', help='output folder to put the text file in', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Experiments\\il_03', type=str)
 parser.add_argument('--res', '-res', help='destination resolution for images to be stored', default=84, type=int)
 parser.add_argument('--duration', '-duration', help='driving duration for the experiment', default=2000, type=int)
-parser.add_argument('--store', '-store', help='type of images to store. choose from [none, rgb]', default='none', type=str)
+parser.add_argument('--store', '-store', help='type of images to store. choose from [none, rgb]', default='rgb', type=str)
 parser.add_argument('--alpha', '-alpha', help='multiplication factor for the imitation model probabilities', default=1.0, type=float)
 parser.add_argument('--gamma', '-gamma', help='multiplication factor for adding positive value', default=0.0, type=float)
 parser.add_argument('--beta', '-beta', help='multiplication factor for adding negative value', default=0.0, type=float)
 parser.add_argument('--delta', '-delta', help='multiplication factor for adding random value', default=0.0, type=float)
 parser.add_argument('--epsilon', '-epsilon', help='multiplication factor for adding straight value', default=0.0, type=float)
-#parser.add_argument('--log_path', '-log_path', help='path to simulation log file', default='C:\\Users\\user\\Documents\\Unreal Projects\\Maze\\Saved\\Logs\\Car_Maze.log', type=str)
-parser.add_argument('--log_path', '-log_path', help='path to simulation log file', default='', type=str)
+parser.add_argument('--log_path', '-log_path', help='path to simulation log file', default='C:\\Users\\user\\Documents\\Unreal Projects\\Maze\\Saved\\Logs\\Car_Maze.log', type=str)
+#parser.add_argument('--log_path', '-log_path', help='path to simulation log file', default='', type=str)
 parser.add_argument('--debug', '-debug', dest='debug', help='debug mode, present fron camera on screen', action='store_true')
 args = parser.parse_args()
 
@@ -200,7 +199,7 @@ if __name__ == "__main__":
             airsim_rec.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(time_stamp,start_idx,duration,coverage,client_pose.position.x_val,client_pose.position.y_val,client_pose.position.z_val,car_state.rpm,car_state.speed,car_controls.steering,"im_{}.png".format(time_stamp)))
         else:
             airsim_rec.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(time_stamp,start_idx,duration,coverage,client_pose.position.x_val,client_pose.position.y_val,client_pose.position.z_val,car_state.rpm,car_state.speed,car_controls.steering))
-    
+        
         counter += 1
         if counter % 1000 == 0:
             print('{} steps recorded'.format(counter))

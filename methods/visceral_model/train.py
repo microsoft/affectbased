@@ -13,8 +13,8 @@ from utils import import_data
 from model import VisceralModel
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dset_file', '-dset_file', help='path to raw data folder', default='C:\\Users\\user\\Documents\\Data\\VisceralMachines\\TrainingFiles\\data_mazeonly_frame_2s_window_noclipping2_07_12_19_cov.h5', type=str)
-parser.add_argument('--output_dir', '-output_dir', help='path to output folder', default='C:\\Users\\user\\Documents\\models\\visceral_models\\visceral_model_84_reg_both_norm_2s_noclipping2_cov', type=str)
+parser.add_argument('--dset_file', '-dset_file', help='path to raw data folder', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Data\\VisceralMachines\\TrainingFiles\\data_mazeonly_frame_2s_window_noclipping2_07_12_19.h5', type=str)
+parser.add_argument('--output_dir', '-output_dir', help='path to output folder', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Models\\visceral_models\\visceral_model_84_reg_both_norm_2s_noclipping2_newdata', type=str)
 parser.add_argument('--pred', '-pred', help='prediction method. choose from [pos, neg, both]', default='both', type=str)
 parser.add_argument('--batch_size', '-batch_size', help='number of samples in one minibatch', default=32, type=int)
 parser.add_argument('--epochs', '-epochs', help='number of epochs to train the model', default=40, type=int)
@@ -82,9 +82,9 @@ for epoch in range(args.epochs):
         with metrics_writer.as_default():
             tf.summary.scalar('Test loss', test_loss.result(), step=test_counter)
 
+    print('Epoch {}, Loss: {}, Test Loss: {}'.format(epoch+1, train_loss.result(), test_loss.result()))
+
     # save model
     if (epoch+1) % 5 == 0 and epoch > 0:
         print('Saving weights to {}'.format(args.output_dir))
         model.save_weights(os.path.join(args.output_dir, "vismodel{}.ckpt".format(epoch+1)))
-    
-    print('Epoch {}, Loss: {}, Test Loss: {}'.format(epoch+1, train_loss.result(), test_loss.result()))

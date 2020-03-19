@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--path', '-path', help='path to experiment folder containing recordings folders', default='C:\\Users\\user\\Documents\\experiments\\data_collection_recordings\\straight', type=str)
+parser.add_argument('--path', '-path', help='path to experiment folder containing recordings folders', default='C:\\Users\\user\\Documents\\Papers\\Affect-based\\Experiments\\il_cur_6.0_02', type=str)
 parser.add_argument('--cov_t', '-cov_t', help='coverage threshold. to cope with too short segments', default=50, type=int)
 args = parser.parse_args()
 
