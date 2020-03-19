@@ -1,4 +1,4 @@
-# Affect-based Intrinsic Rewards for Learning General Representations  
+# Affect-based Intrinsic Rewards for Exploration and Learning  
 Official code repository for [https://arxiv.org/abs/1912.00403](https://arxiv.org/abs/1912.00403).  
 
 <img src="diagram.png" alt="diagram" width="245"/>   <img src="driving_sample.gif" alt="driving_sample" width="390"/>  
